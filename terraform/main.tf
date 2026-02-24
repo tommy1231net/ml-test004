@@ -202,3 +202,9 @@ resource "google_storage_bucket" "public_bucket" {
     }
   }
 }
+
+resource "google_storage_bucket_iam_member" "public_rule" {
+  bucket = google_storage_bucket.public_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
