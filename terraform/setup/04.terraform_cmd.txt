@@ -1,0 +1,6 @@
+# Navigate from the setup folder to the folder containing main.tf
+# and run the following commands
+cd ..
+terraform init -backend-config=backend.tfbackend
+terraform plan
+terraform apply

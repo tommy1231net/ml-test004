@@ -1,0 +1,10 @@
+### Update .tf files (Manual Provisioning)
+
+1)Open backend.tfbackend and replace "XXXXX" with your Project ID.
+  bucket = "XXXXX-tfstate"
+
+2)Open terraform.tfvars and update the following values.
+  project_id = "XXXXX"  # Project ID of the created project
+  project_number = "XXXXX"  # Project Number of the created project
+  region = "asia-northeast1"  # Your GCP Region
+  github_repo = "XXXXX/YYYYY"  # GitHub Repository Name

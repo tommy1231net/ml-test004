@@ -1,0 +1,10 @@
+# Register the following in Secrets.
+DEPLOYER_SA_EMAIL:Dedicated deployment Service Account. Refer to main.tf.
+GCP_PROJECT_ID
+GCP_PROJECT_NUMBER
+GCP_REGION
+WIF_PROVIDER:Workload Identity Federation Provider-The portion following "project/"
+
+# Configure Environments as follows:
+Set the name to "production"
+Check "Required reviewers" and add your account name

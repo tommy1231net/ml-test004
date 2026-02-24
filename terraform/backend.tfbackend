@@ -1,0 +1,3 @@
+# Backend設定値
+bucket = "XXXXX-tfstate"
+prefix = "terraform/state"

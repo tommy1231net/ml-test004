@@ -1,0 +1,6 @@
+# Please modify the following parts.
+
+// Replace with the Cloud Run URL with "/predict" appended.
+const url = "https://ml-test004-api-772435570066.asia-northeast1.run.app/predict";
+
+
