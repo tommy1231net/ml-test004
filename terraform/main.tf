@@ -1,26 +1,26 @@
 # =================================================================
-# 1. 変数定義
+# Variable Definitions
 # =================================================================
 data "google_project" "project" {}
 
 # =================================================================
-# 2. サービスアカウントの定義 (役割の分離)
+# Service Account Definitions (Separation of Concerns)
 # =================================================================
 
-# アプリデプロイ兼ビルド用SA (GitHub ActionsからWIFで利用)
+# Service Account for App Build and Deployment (Used by GitHub Actions via WIF)
 resource "google_service_account" "deployer_sa" {
   account_id   = "${data.google_project.project.project_id}${var.deployer_sa_suffix}"
   display_name = "SA for GitHub Actions Deployment and Cloud Build"
 }
 
-# アプリ実行用SA (Cloud Runインスタンスが使用)
+# Service Account for App Execution (Used by Cloud Run instances)
 resource "google_service_account" "runtime_sa" {
   account_id   = "${data.google_project.project.project_id}${var.runtime_sa_suffix}"
   display_name = "SA for Cloud Run Runtime"
 }
 
 # =================================================================
-# 3. Workload Identity Federation (WIF) の設定
+# Workload Identity Federation (WIF) Configuration
 # =================================================================
 
 resource "google_iam_workload_identity_pool" "github_pool" {
@@ -43,7 +43,6 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
   }
 }
 
-# デプロイ用SAにGitHubリポジトリを「ユーザー」として紐付ける
 resource "google_service_account_iam_member" "wif_binding" {
   service_account_id = google_service_account.deployer_sa.name
   role               = "roles/iam.workloadIdentityUser"
@@ -51,7 +50,7 @@ resource "google_service_account_iam_member" "wif_binding" {
 }
 
 # =================================================================
-# 4. Artifact Registry リポジトリの作成
+# Creation of Artifact Registry Repository
 # =================================================================
 
 resource "google_artifact_registry_repository" "app_repo" {
@@ -60,7 +59,6 @@ resource "google_artifact_registry_repository" "app_repo" {
   description   = "Docker repository for ML App"
   format        = "DOCKER"
 
-  # 古いイメージを自動削除する設定（最新の3つだけ残す）
   cleanup_policies {
     id     = "keep-minimum-versions"
     action = "KEEP"
@@ -71,10 +69,9 @@ resource "google_artifact_registry_repository" "app_repo" {
 }
 
 # =================================================================
-# 5. 権限（IAM）の設定 - 最小権限の原則
+# IAM Role Configurations - Principle of Least Privilege (PoLP)
 # =================================================================
 
-# 【デプロイ用SAへの権限付与】
 locals {
   deployer_roles = [
     "roles/cloudbuild.builds.editor",
@@ -94,7 +91,6 @@ resource "google_project_iam_member" "deployer_iam" {
   member   = "serviceAccount:${google_service_account.deployer_sa.email}"
 }
 
-# デプロイ用SAが「自分自身」と「実行用SA」を利用するための権限 (actAs)
 resource "google_service_account_iam_member" "allow_impersonation" {
   for_each = {
     deployer = google_service_account.deployer_sa.name
@@ -106,7 +102,7 @@ resource "google_service_account_iam_member" "allow_impersonation" {
 }
 
 # =================================================================
-# 6. Cloud Run設定
+# Cloud Run Configuration
 # =================================================================
 resource "google_cloud_run_v2_service" "model_api" {
   name     = "${data.google_project.project.project_id}${var.cloud_run_suffix}"
@@ -158,7 +154,6 @@ resource "google_cloud_run_v2_service" "model_api" {
   }
 }
 
-# Cloud Run V2 サービスを一般公開（未認証アクセス許可）にする設定
 resource "google_cloud_run_v2_service_iam_member" "cloud_run_public_access" {
   location = google_cloud_run_v2_service.model_api.location
   project  = google_cloud_run_v2_service.model_api.project
@@ -168,7 +163,8 @@ resource "google_cloud_run_v2_service_iam_member" "cloud_run_public_access" {
 }
 
 # =================================================================
-# 7. 関連ファイル公開用バケットの作成（CI/CDとは無関係）
+# Creation of Cloud Storage Bucket for Related Files
+# (for HTML storage, independent of CI/CD)
 # =================================================================
 
 resource "google_storage_bucket" "public_bucket" {
