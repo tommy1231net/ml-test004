@@ -1,0 +1,52 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ] # mainブランチにpushされたらDeploy開始
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      
+    permissions:
+      contents: read
+      id-token: write # WIF認証に必須
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. Google Cloud 認証 (WIF)
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.DEPLOYER_SA_EMAIL }}
+
+      # 2. gcloud CLI のセットアップ
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 3. Artifact Registry への Docker 認証
+      - name: Docker Auth
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      # 4. ビルド & プッシュ (Cloud Buildを利用して高速化)
+      - name: Submit Cloud Build
+        run: |
+          gcloud builds submit \
+            --no-source \
+            --config cloudbuild.yaml \
+            --service-account="projects/${{ secrets.GCP_PROJECT_ID }}/serviceAccounts/${{ secrets.GCP_PROJECT_ID }}-dpl@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com" \
+            --substitutions _IMAGE_NAME=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-acr/${{ secrets.GCP_PROJECT_ID }}-api:${{ github.sha }},_REPO_FULL_NAME=${{ github.repository }}
+
+      # 5. Cloud Run へデプロイ
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ secrets.GCP_PROJECT_ID }}-api \
+            --image ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_PROJECT_ID }}-acr/${{ secrets.GCP_PROJECT_ID }}-api:${{ github.sha }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --service-account ${{ secrets.GCP_PROJECT_ID }}-rt@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com

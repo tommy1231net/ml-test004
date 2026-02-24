@@ -1,0 +1,28 @@
+# 1. すべての隠しファイル・フォルダを拒否（セキュリティの基本）
+.*
+
+# 2. 隠しファイルの中での「例外（Push対象）」を指定
+!.gitignore
+!.github/
+
+# 3. Pythonの実行ゴミや仮想環境を除外
+__pycache__/
+*.py[cod]
+*.class
+venv/
+.env
+
+# 4. JupyterLab特有の不要なファイル
+.ipynb_checkpoints/
+*.ipynb
+Untitled*
+0ld
+
+# 5. 学習用データやログ（成果物のjoblibだけあればOK）
+*.csv
+*.log
+
+# 6. 認証情報の流出を物理的に防ぐ
+*.json
+*.pem
+*.key
