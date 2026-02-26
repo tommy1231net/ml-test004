@@ -1,0 +1,4 @@
+### Prerequisites
+1)Create a new project in GCP
+2)Create a repository in GitHub
+3)Make sure to establish a method for signing in to GitHub.

@@ -1,7 +1,7 @@
 # !!!Caution!!!
 # Replace "XXXXX" to GCP Project ID
 
-PROJECT_ID="ml-test004" #Replace Value
+PROJECT_ID="XXXXX" #Replace Value
 
 echo "--- Starting Bootstrap for ${PROJECT_ID} ---"
 
